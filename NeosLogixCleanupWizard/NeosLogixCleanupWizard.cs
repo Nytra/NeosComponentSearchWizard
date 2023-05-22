@@ -20,7 +20,7 @@ namespace NeosLogixCleanupWizard {
 			Engine.Current.RunPostInit(AddMenuOption);
 		} 
 		void AddMenuOption() {
-			DevCreateNewForm.AddAction("Editor", "Nytra Wizard", (x) => LogixCleanupWizard.GetOrCreateWizard(x));
+			DevCreateNewForm.AddAction("Editor", "Component Wizard", (x) => LogixCleanupWizard.GetOrCreateWizard(x));
 		}
 
 		class LogixCleanupWizard {
@@ -139,7 +139,7 @@ namespace NeosLogixCleanupWizard {
 				UI.Next("Root");
 				UI.Current.AttachComponent<RefEditor>().Setup(processingRoot.Reference);
 
-				UI.Text("Component Field:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.Text("Component:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
@@ -194,7 +194,8 @@ namespace NeosLogixCleanupWizard {
 					}
 				};
 
-				UI.Text("----------");
+				//UI.Text("----------");
+				UI.Text("");
 
 				var enableButton = UI.Button("Enable");
 				enableButton.LocalPressed += (IButton button, ButtonEventData data) =>
