@@ -5,6 +5,7 @@ using FrooxEngine.UIX;
 using BaseX;
 using CodeX;
 using HarmonyLib;
+using System.CodeDom;
 
 namespace NeosLogixCleanupWizard {
 	public class NeosLogixCleanupWizard : NeosMod {
@@ -13,14 +14,19 @@ namespace NeosLogixCleanupWizard {
 		public override string Version => "1.0.0";
 		public override string Link => "https://github.com/XDelta/NeosLogixCleanupWizard";
 
+		const string WIZARD_TITLE = "Component Search Wizard (Mod)";
+
+		const string COMPONENT_NAME_TAG = "<color=green>";
+		const string COMPONENT_NAME_TAG_END = "</color>";
+		const string COMPONENT_ENABLED_TAG = "<color=yellow>";
+		const string COMPONENT_ENABLED_TAG_END = "</color>";
+
 		public override void OnEngineInit() {
-			/*Harmony harmony = new Harmony("tk.deltawolf.LogixCleanupWizard");
-			harmony.PatchAll();*/
-			Harmony harmony = new Harmony("owo.Nytra.ComponentWizard");
+			//Harmony harmony = new Harmony("owo.Nytra.ComponentWizard");
 			Engine.Current.RunPostInit(AddMenuOption);
 		} 
 		void AddMenuOption() {
-			DevCreateNewForm.AddAction("Editor", "Component Wizard", (x) => LogixCleanupWizard.GetOrCreateWizard(x));
+			DevCreateNewForm.AddAction("Editor", WIZARD_TITLE, (x) => LogixCleanupWizard.GetOrCreateWizard(x));
 		}
 
 		class LogixCleanupWizard {
@@ -41,15 +47,25 @@ namespace NeosLogixCleanupWizard {
 			readonly ValueField<bool> ignoreGenericTypes;
 			readonly ValueField<bool> showDetails;
 			readonly ValueField<bool> confirmDestroy;
+			readonly ValueField<string> stringField;
+			readonly ValueField<bool> matchCase;
 
-			readonly ReferenceMultiplexer<Component> thingy;
+			readonly ReferenceMultiplexer<Component> results;
 
 			readonly Button destroyButton;
 			readonly Button searchButton;
 			readonly Button enableButton;
 			readonly Button disableButton;
 
+			enum ConditionMode
+			{
+				Any,
+				All
+			}
+
 			static bool doingStuff = false;
+
+			readonly ValueField<ConditionMode> conditionMode;
 
 			readonly Text statusText;
 			void UpdateStatusText(string info) {
@@ -83,7 +99,16 @@ namespace NeosLogixCleanupWizard {
 							str += "/" + s.Name;
 						}
 					}
-					str += "/" + slot.Name;
+					if (first)
+					{
+						str += slot.Name;
+						first = false;
+					}
+					else
+					{
+						str += "/" + slot.Name;
+					}
+					
 				}
 				else
 				{
@@ -105,19 +130,58 @@ namespace NeosLogixCleanupWizard {
 					return false;
 				}
 
-				if (componentField.Reference.Target == null)
-				{
-					UpdateStatusText("No component provided!");
-					return false;
-				}
+				//if (componentField.Reference.Target == null)
+				//{
+					//UpdateStatusText("No component provided!");
+					//return false;
+				//}
 
 				if (doingStuff)
 				{
-					UpdateStatusText("Operations in progress!");
+					UpdateStatusText("Operations in progress! (Or the mod has crashed)");
 					return false;
 				}
 
 				return true;
+			}
+
+			bool IsComponentMatch(Component c)
+			{
+				bool matchType, matchName;
+
+				if (ignoreGenericTypes.Value.Value)
+				{
+					matchType = c.GetType().Name == componentField.Reference.Target?.GetType().Name;
+				}
+				else
+				{
+					matchType = c.GetType() == componentField.Reference.Target?.GetType();
+
+				}
+
+				if (matchCase.Value.Value)
+				{
+					matchName = stringField.Value.Value != null && stringField.Value.Value.Trim() != "" && c.GetType().GetNiceName().Contains(stringField.Value.Value);
+				}
+				else
+				{
+					matchName = stringField.Value.Value != null && stringField.Value.Value.Trim() != "" && c.GetType().GetNiceName().ToLower().Contains(stringField.Value.Value.ToLower());
+				}
+
+				switch (conditionMode.Value.Value)
+				{
+					case ConditionMode.All:
+						return matchType && matchName;
+					case ConditionMode.Any:
+						return matchType || matchName;
+					default:
+						return false;
+				}
+			}
+
+			List<Component> GetSearchComponents()
+			{
+				return processingRoot.Reference.Target?.GetComponentsInChildren((Component c) => IsComponentMatch(c));
 			}
 
 			LogixCleanupWizard(Slot x) {
@@ -131,7 +195,7 @@ namespace NeosLogixCleanupWizard {
 				NeosCanvasPanel canvasPanel = WizardSlot.AttachComponent<NeosCanvasPanel>();
 				canvasPanel.Panel.AddCloseButton();
 				canvasPanel.Panel.AddParentButton();
-				canvasPanel.Panel.Title = "Component Wizard";
+				canvasPanel.Panel.Title = WIZARD_TITLE;
 				//canvasPanel.Canvas.Size.Value = new float2(400f, 390f);
 				canvasPanel.Canvas.Size.Value = new float2(800f, 800f);
 
@@ -142,6 +206,9 @@ namespace NeosLogixCleanupWizard {
 				showDetails = Data.AddSlot("showDetails").AttachComponent<ValueField<bool>>();
 				//showDetails.Value.Value = true;
 				confirmDestroy = Data.AddSlot("confirmDestroy").AttachComponent<ValueField<bool>>();
+				stringField = Data.AddSlot("stringField").AttachComponent<ValueField<string>>();
+				conditionMode = Data.AddSlot("conditionMode").AttachComponent<ValueField<ConditionMode>>();
+				matchCase = Data.AddSlot("matchCase").AttachComponent<ValueField<bool>>();
 
 				UIBuilder UI = new UIBuilder(canvasPanel.Canvas);
 				UI.Canvas.MarkDeveloper();
@@ -169,15 +236,25 @@ namespace NeosLogixCleanupWizard {
 				UI.Next("Root");
 				UI.Current.AttachComponent<RefEditor>().Setup(processingRoot.Reference);
 
-				UI.Text("Component:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.Text("Component Type:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
 				UI.HorizontalElementWithLabel("Ignore Generic Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
-				UI.HorizontalElementWithLabel("Spawn Detail Text:", 0.942f, () => UI.BooleanMemberEditor(showDetails.Value));
 
-				//UI.Text("String Field:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
-				//UI.TextField().Text.Content.OnValueChange += (field) => stringField.Value.Value = field.Value;
+				UI.Text("Name Contains:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.TextField().Text.Content.OnValueChange += (field) => stringField.Value.Value = field.Value;
+
+				UI.HorizontalElementWithLabel("Match Case:", 0.942f, () => UI.BooleanMemberEditor(matchCase.Value));
+
+				UI.Text("Condition Mode:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+
+				var enumSlot = UI.Next("Enum");
+				UI.NestInto(enumSlot);
+				UI.EnumMemberEditor(conditionMode.Value);
+				UI.NestOut();
+
+				UI.Text("");
 
 				//testButton = UI.Button("Make an explode owo");
 				//testButton.LocalPressed += (IButton button, ButtonEventData data) => 
@@ -191,6 +268,8 @@ namespace NeosLogixCleanupWizard {
 
 				searchButton = UI.Button("Search");
 				searchButton.LocalPressed += SearchPressed;
+
+				UI.HorizontalElementWithLabel("Spawn Detail Text:", 0.942f, () => UI.BooleanMemberEditor(showDetails.Value));
 
 				UI.Text("----------");
 				//UI.Text("");
@@ -211,13 +290,13 @@ namespace NeosLogixCleanupWizard {
 				UI.Text("Status:");
 				statusText = UI.Text("---");
 
-				thingy = Data.AddSlot("referenceMultiplexer").AttachComponent<ReferenceMultiplexer<Component>>();
+				results = Data.AddSlot("referenceMultiplexer").AttachComponent<ReferenceMultiplexer<Component>>();
 
 				UI.NestInto(right);
 				UI.ScrollArea();
 				UI.FitContent(SizeFit.Disabled, SizeFit.PreferredSize);
 
-				SyncMemberEditorBuilder.Build(thingy.References, "MatchingComponents", null, UI);
+				SyncMemberEditorBuilder.Build(results.References, "MatchingComponents", null, UI);
 
 				WizardSlot.PositionInFrontOfUser(float3.Backward, distance: 1f);
 			}
@@ -233,32 +312,32 @@ namespace NeosLogixCleanupWizard {
 				doingStuff = true;
 				searchButton.Enabled = false;
 
-				thingy.References.Clear();
+				results.References.Clear();
 
 				int count = 0;
 				string text = "";
 				if (ignoreGenericTypes.Value.Value == true)
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType().Name == componentField.Reference.Target.GetType().Name))
+					foreach (Component c in GetSearchComponents())
 					{
 						count++;
-						text += c.GetType().GetNiceName() + " - " + (c.Enabled ? "Enabled" : "Disabled") + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
-						thingy.References.Add(c);
+						text += COMPONENT_NAME_TAG + c.GetType().GetNiceName() + COMPONENT_NAME_TAG_END + " - " + COMPONENT_ENABLED_TAG + (c.Enabled ? "Enabled" : "Disabled") + COMPONENT_ENABLED_TAG_END + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
+						results.References.Add(c);
 					}
 				}
 				else
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType() == componentField.Reference.Target.GetType()))
+					foreach (Component c in GetSearchComponents())
 					{
 						count++;
-						text += c.GetType().GetNiceName() + " - " + (c.Enabled ? "Enabled" : "Disabled") + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
-						thingy.References.Add(c);
+						text += COMPONENT_NAME_TAG + c.GetType().GetNiceName() + COMPONENT_NAME_TAG_END + " - " + COMPONENT_ENABLED_TAG + (c.Enabled ? "Enabled" : "Disabled") + COMPONENT_ENABLED_TAG_END + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
+						results.References.Add(c);
 					}
 				}
 
 				UpdateStatusText($"Found {count} matching components.");
 
-				if (showDetails.Value.Value)
+				if (showDetails.Value.Value && count > 0)
 				{
 					Slot textSlot = WizardSlot.LocalUserSpace.AddSlot("Search Text");
 					UniversalImporter.SpawnText(textSlot, text, new color(1f, 1f, 1f, 0.5f), textSize: 12, canvasSize: new float2(800, 400)); ;
@@ -273,13 +352,19 @@ namespace NeosLogixCleanupWizard {
 			{
 				if (!ValidateWizard()) return;
 
+				if (results.References.Count == 0)
+				{
+					UpdateStatusText("No search results to process!");
+					return;
+				}
+
 				doingStuff = true;
 				enableButton.Enabled = false;
 
 				int count = 0;
 				if (ignoreGenericTypes.Value.Value == true)
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType().Name == componentField.Reference.Target.GetType().Name))
+					foreach (Component c in results.References)
 					{
 						c.Enabled = true;
 						count++;
@@ -287,7 +372,7 @@ namespace NeosLogixCleanupWizard {
 				}
 				else
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType() == componentField.Reference.Target.GetType()))
+					foreach (Component c in results.References)
 					{
 						c.Enabled = true;
 						count++;
@@ -304,13 +389,19 @@ namespace NeosLogixCleanupWizard {
 			{
 				if (!ValidateWizard()) return;
 
+				if (results.References.Count == 0)
+				{
+					UpdateStatusText("No search results to process!");
+					return;
+				}
+
 				doingStuff = true;
 				disableButton.Enabled = false;
 
 				int count = 0;
 				if (ignoreGenericTypes.Value.Value == true)
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType().Name == componentField.Reference.Target.GetType().Name))
+					foreach (Component c in results.References)
 					{
 						c.Enabled = false;
 						count++;
@@ -318,7 +409,7 @@ namespace NeosLogixCleanupWizard {
 				}
 				else
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType() == componentField.Reference.Target.GetType()))
+					foreach (Component c in results.References)
 					{
 						c.Enabled = false;
 						count++;
@@ -341,13 +432,19 @@ namespace NeosLogixCleanupWizard {
 					return;
 				}
 
+				if (results.References.Count == 0)
+				{
+					UpdateStatusText("No search results to process!");
+					return;
+				}
+
 				doingStuff = true;
 				destroyButton.Enabled = false;
 
 				int count = 0;
 				if (ignoreGenericTypes.Value.Value == true)
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType().Name == componentField.Reference.Target.GetType().Name))
+					foreach (Component c in results.References)
 					{
 						c.RunSynchronously(() =>
 						{
@@ -358,7 +455,7 @@ namespace NeosLogixCleanupWizard {
 				}
 				else
 				{
-					foreach (Component c in processingRoot.Reference.Target.GetComponentsInChildren((Component c) => c.GetType() == componentField.Reference.Target.GetType()))
+					foreach (Component c in results.References)
 					{
 						c.RunSynchronously(() =>
 						{
@@ -370,7 +467,7 @@ namespace NeosLogixCleanupWizard {
 
 				confirmDestroy.Value.Value = false;
 				UpdateStatusText($"Destroyed {count} matching components.");
-				thingy.References.Clear();
+				results.References.Clear();
 
 				doingStuff = false;
 				destroyButton.Enabled = true;
