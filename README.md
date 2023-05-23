@@ -9,4 +9,5 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 
 ## Usage
 The wizard can be found in the DevTip 'Create New' menu under Editors/Component Wizard (Mod). <br>
+
 This mod should be used carefully as it allows changing a large number of components at once.<br>
