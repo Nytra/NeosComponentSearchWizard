@@ -1,6 +1,6 @@
-# NeosLogixCleanupWizard
+# ComponentWizard
 
-A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that provides a wizard for cleaning up leftover logix components.
+A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that provides a wizard for searching for components by type or by string matching and then batch enabling, disabling or destroying them.
 
 ## Installation
 1. Install [NeosModLoader](https://github.com/zkxs/NeosModLoader).
@@ -8,10 +8,5 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 3. Start the game. If you want to verify that the mod is working you can check your Neos logs.
 
 ## Usage
-The wizard can be found in the DevTip 'Create New' menu under Editors/LogiX Cleanup. <br>
-I'd **Strongly recommend** saving a backup before using any functions of this mod and testing functionality after.<br>
-
-![CreateNew Menu](https://user-images.githubusercontent.com/7883807/181695795-0f2695d2-231c-4e6f-813a-d82fd7c3045a.png)
-
-
-![Wizard Window](https://user-images.githubusercontent.com/7883807/181696216-c44bafd8-a238-4aed-87ff-4e1e49b1a9a7.png)
+The wizard can be found in the DevTip 'Create New' menu under Editors/Component Wizard (Mod). <br>
+This mod should be used carefully as it allows changing a large number of components at once.<br>
