@@ -6,6 +6,7 @@ using BaseX;
 using CodeX;
 using HarmonyLib;
 using System.CodeDom;
+using System.Threading.Tasks;
 
 namespace ComponentWizard
 {
@@ -53,6 +54,7 @@ namespace ComponentWizard
 			readonly ValueField<bool> allowChanges;
 			readonly ValueField<bool> searchNiceName;
 			readonly ValueField<bool> conditionMode;
+			readonly ValueField<int> maxResults;
 
 			readonly ReferenceMultiplexer<Component> results;
 
@@ -208,7 +210,7 @@ namespace ComponentWizard
 				canvasPanel.Panel.AddParentButton();
 				canvasPanel.Panel.Title = WIZARD_TITLE;
 				//canvasPanel.Canvas.Size.Value = new float2(400f, 390f);
-				canvasPanel.Canvas.Size.Value = new float2(800f, 760f);
+				canvasPanel.Canvas.Size.Value = new float2(800f, 816f);
 
 				Slot Data = WizardSlot.AddSlot("Data");
 				this.processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
@@ -222,6 +224,8 @@ namespace ComponentWizard
 				matchCase = Data.AddSlot("matchCase").AttachComponent<ValueField<bool>>();
 				allowChanges = Data.AddSlot("allowChanges").AttachComponent<ValueField<bool>>();
 				searchNiceName = Data.AddSlot("searchNiceName").AttachComponent<ValueField<bool>>();
+				maxResults = Data.AddSlot("searchNiceName").AttachComponent<ValueField<int>>();
+				maxResults.Value.Value = 128;
 
 				UIBuilder UI = new UIBuilder(canvasPanel.Canvas);
 				UI.Canvas.MarkDeveloper();
@@ -251,7 +255,7 @@ namespace ComponentWizard
 
 				UI.Spacer(24f);
 
-				UI.Text("Component Type:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.Text("{1} Component Type:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
@@ -259,7 +263,7 @@ namespace ComponentWizard
 
 				UI.Spacer(24f);
 
-				UI.Text("Name Contains:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.Text("{2} Name Contains:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.TextField().Text.Content.OnValueChange += (field) => nameField.Value.Value = field.Value;
 
 				UI.HorizontalElementWithLabel("Match Case:", 0.942f, () => UI.BooleanMemberEditor(matchCase.Value));
@@ -270,6 +274,11 @@ namespace ComponentWizard
 				UI.HorizontalElementWithLabel("Condition Mode (True: AND, False: OR):", 0.942f, () => UI.BooleanMemberEditor(conditionMode.Value));
 
 				UI.Spacer(24f);
+
+				UI.Text("Max Results:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				var intField = UI.IntegerField(1, 1025);
+				intField.ParsedValue.Value = maxResults.Value.Value;
+				intField.ParsedValue.OnValueChange += (field) => maxResults.Value.Value = field.Value;
 
 				//UI.Text("Condition Mode:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 
@@ -295,7 +304,6 @@ namespace ComponentWizard
 				searchButton.LocalPressed += SearchPressed;
 
 				UI.Text("----------");
-				//UI.Text("");
 
 				UI.HorizontalElementWithLabel("Allow Changes:", 0.942f, () => UI.BooleanMemberEditor(allowChanges.Value));
 
@@ -345,10 +353,16 @@ namespace ComponentWizard
 
 				int count = 0;
 				string text = "";
+				bool stoppedEarly = false;
 				if (ignoreGenericTypes.Value.Value == true)
 				{
 					foreach (Component c in GetSearchComponents())
 					{
+						if (results.References.Count > maxResults.Value.Value)
+						{
+							stoppedEarly = true;
+							break;
+						}
 						count++;
 						text += COMPONENT_NAME_TAG + c.GetType().GetNiceName() + COMPONENT_NAME_TAG_END + " - " + COMPONENT_ENABLED_TAG + (c.Enabled ? "Enabled" : "Disabled") + COMPONENT_ENABLED_TAG_END + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
 						results.References.Add(c);
@@ -358,13 +372,25 @@ namespace ComponentWizard
 				{
 					foreach (Component c in GetSearchComponents())
 					{
+						if (results.References.Count > maxResults.Value.Value)
+						{
+							stoppedEarly = true;
+							break;
+						}
 						count++;
 						text += COMPONENT_NAME_TAG + c.GetType().GetNiceName() + COMPONENT_NAME_TAG_END + " - " + COMPONENT_ENABLED_TAG + (c.Enabled ? "Enabled" : "Disabled") + COMPONENT_ENABLED_TAG_END + " - " + GetSlotParentHierarchyString(c.Slot) + "\n";
 						results.References.Add(c);
 					}
 				}
 
-				UpdateStatusText($"Found {count} matching components.");
+				if (stoppedEarly)
+				{
+					UpdateStatusText($"Found {count} matching components (Max Results limit reached).");
+				}
+				else
+				{
+					UpdateStatusText($"Found {count} matching components.");
+				}
 
 				if (showDetails.Value.Value && count > 0)
 				{
