@@ -7,12 +7,13 @@ using CodeX;
 using HarmonyLib;
 using System.CodeDom;
 
-namespace NeosLogixCleanupWizard {
-	public class NeosLogixCleanupWizard : NeosMod {
+namespace ComponentWizard
+{
+	public class ComponentWizard : NeosMod {
 		public override string Name => "Component Wizard";
 		public override string Author => "Nytra";
 		public override string Version => "1.0.0";
-		public override string Link => "https://github.com/XDelta/NeosLogixCleanupWizard";
+		public override string Link => "https://github.com/Nytra/NeosComponentWizard";
 
 		const string WIZARD_TITLE = "Component Search Wizard (Mod)";
 
@@ -47,8 +48,11 @@ namespace NeosLogixCleanupWizard {
 			readonly ValueField<bool> ignoreGenericTypes;
 			readonly ValueField<bool> showDetails;
 			readonly ValueField<bool> confirmDestroy;
-			readonly ValueField<string> stringField;
+			readonly ValueField<string> nameField;
 			readonly ValueField<bool> matchCase;
+			readonly ValueField<bool> allowChanges;
+			readonly ValueField<bool> searchNiceName;
+			readonly ValueField<bool> conditionMode;
 
 			readonly ReferenceMultiplexer<Component> results;
 
@@ -57,15 +61,15 @@ namespace NeosLogixCleanupWizard {
 			readonly Button enableButton;
 			readonly Button disableButton;
 
-			enum ConditionMode
-			{
-				Any,
-				All
-			}
+			//enum ConditionMode
+			//{
+				//Any,
+				//All
+			//}
 
 			static bool doingStuff = false;
 
-			readonly ValueField<ConditionMode> conditionMode;
+			//readonly ValueField<ConditionMode> conditionMode;
 
 			readonly Text statusText;
 			void UpdateStatusText(string info) {
@@ -148,6 +152,7 @@ namespace NeosLogixCleanupWizard {
 			bool IsComponentMatch(Component c)
 			{
 				bool matchType, matchName;
+				string compName, searchString;
 
 				if (ignoreGenericTypes.Value.Value)
 				{
@@ -156,26 +161,32 @@ namespace NeosLogixCleanupWizard {
 				else
 				{
 					matchType = c.GetType() == componentField.Reference.Target?.GetType();
-
 				}
 
-				if (matchCase.Value.Value)
+				compName = searchNiceName.Value.Value ? c.GetType().GetNiceName() : c.GetType().Name;
+				compName = matchCase.Value.Value ? compName : compName.ToLower();
+
+				searchString = matchCase.Value.Value ? nameField.Value.Value : nameField.Value.Value?.ToLower();
+
+				matchName = nameField.Value.Value != null && nameField.Value.Value.Trim() != "" && compName.Contains(searchString);
+
+				//switch (conditionMode.Value.Value)
+				//{
+				//	case ConditionMode.All:
+				//		return matchType && matchName;
+				//	case ConditionMode.Any:
+				//		return matchType || matchName;
+				//	default:
+				//		return false;
+				//}
+
+				if (conditionMode.Value.Value)
 				{
-					matchName = stringField.Value.Value != null && stringField.Value.Value.Trim() != "" && c.GetType().GetNiceName().Contains(stringField.Value.Value);
+					return matchType && matchName;
 				}
 				else
 				{
-					matchName = stringField.Value.Value != null && stringField.Value.Value.Trim() != "" && c.GetType().GetNiceName().ToLower().Contains(stringField.Value.Value.ToLower());
-				}
-
-				switch (conditionMode.Value.Value)
-				{
-					case ConditionMode.All:
-						return matchType && matchName;
-					case ConditionMode.Any:
-						return matchType || matchName;
-					default:
-						return false;
+					return matchType || matchName;
 				}
 			}
 
@@ -206,9 +217,11 @@ namespace NeosLogixCleanupWizard {
 				showDetails = Data.AddSlot("showDetails").AttachComponent<ValueField<bool>>();
 				//showDetails.Value.Value = true;
 				confirmDestroy = Data.AddSlot("confirmDestroy").AttachComponent<ValueField<bool>>();
-				stringField = Data.AddSlot("stringField").AttachComponent<ValueField<string>>();
-				conditionMode = Data.AddSlot("conditionMode").AttachComponent<ValueField<ConditionMode>>();
+				nameField = Data.AddSlot("nameField").AttachComponent<ValueField<string>>();
+				conditionMode = Data.AddSlot("conditionMode").AttachComponent<ValueField<bool>>();
 				matchCase = Data.AddSlot("matchCase").AttachComponent<ValueField<bool>>();
+				allowChanges = Data.AddSlot("allowChanges").AttachComponent<ValueField<bool>>();
+				searchNiceName = Data.AddSlot("searchNiceName").AttachComponent<ValueField<bool>>();
 
 				UIBuilder UI = new UIBuilder(canvasPanel.Canvas);
 				UI.Canvas.MarkDeveloper();
@@ -219,10 +232,10 @@ namespace NeosLogixCleanupWizard {
 
 				UI.SplitHorizontally(0.5f, out RectTransform left, out RectTransform right);
 
-				UI.NestInto(left);
-
 				left.OffsetMax.Value = new float2(-2f);
 				right.OffsetMin.Value = new float2(2f);
+
+				UI.NestInto(left);
 
 				VerticalLayout verticalLayout = UI.VerticalLayout(4f, childAlignment: Alignment.TopCenter);
 				verticalLayout.ForceExpandHeight.Value = false;
@@ -236,25 +249,37 @@ namespace NeosLogixCleanupWizard {
 				UI.Next("Root");
 				UI.Current.AttachComponent<RefEditor>().Setup(processingRoot.Reference);
 
+				UI.Spacer(24f);
+
 				UI.Text("Component Type:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
 				UI.HorizontalElementWithLabel("Ignore Generic Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
 
+				UI.Spacer(24f);
+
 				UI.Text("Name Contains:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
-				UI.TextField().Text.Content.OnValueChange += (field) => stringField.Value.Value = field.Value;
+				UI.TextField().Text.Content.OnValueChange += (field) => nameField.Value.Value = field.Value;
 
 				UI.HorizontalElementWithLabel("Match Case:", 0.942f, () => UI.BooleanMemberEditor(matchCase.Value));
+				UI.HorizontalElementWithLabel("Search Full Component Name:", 0.942f, () => UI.BooleanMemberEditor(searchNiceName.Value));
 
-				UI.Text("Condition Mode:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.Spacer(24f);
 
-				var enumSlot = UI.Next("Enum");
-				UI.NestInto(enumSlot);
-				UI.EnumMemberEditor(conditionMode.Value);
-				UI.NestOut();
+				UI.HorizontalElementWithLabel("Condition Mode (True: AND, False: OR):", 0.942f, () => UI.BooleanMemberEditor(conditionMode.Value));
 
-				UI.Text("");
+				UI.Spacer(24f);
+
+				//UI.Text("Condition Mode:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+
+				//var enumSlot = UI.Next("Enum");
+				//UI.NestInto(enumSlot);
+				//UI.EnumMemberEditor(conditionMode.Value);
+				//UI.NestOut();
+
+				//UI.Text("");
+				UI.HorizontalElementWithLabel("Spawn Detail Text:", 0.942f, () => UI.BooleanMemberEditor(showDetails.Value));
 
 				//testButton = UI.Button("Make an explode owo");
 				//testButton.LocalPressed += (IButton button, ButtonEventData data) => 
@@ -269,10 +294,10 @@ namespace NeosLogixCleanupWizard {
 				searchButton = UI.Button("Search");
 				searchButton.LocalPressed += SearchPressed;
 
-				UI.HorizontalElementWithLabel("Spawn Detail Text:", 0.942f, () => UI.BooleanMemberEditor(showDetails.Value));
-
 				UI.Text("----------");
 				//UI.Text("");
+
+				UI.HorizontalElementWithLabel("Allow Changes:", 0.942f, () => UI.BooleanMemberEditor(allowChanges.Value));
 
 				enableButton = UI.Button("Enable");
 				enableButton.LocalPressed += EnablePressed;
@@ -280,12 +305,16 @@ namespace NeosLogixCleanupWizard {
 				disableButton = UI.Button("Disable");
 				disableButton.LocalPressed += DisablePressed;
 
+				UI.Spacer(24f);
+
 				UI.HorizontalElementWithLabel("Confirm Destroy:", 0.942f, () => UI.BooleanMemberEditor(confirmDestroy.Value));
 
 				destroyButton = UI.Button("Destroy");
 				destroyButton.LocalPressed += DestroyPressed;
 
 				processingRoot.Reference.Value = WizardSlot.World.RootSlot.ReferenceID;
+
+				UI.Spacer(24f);
 
 				UI.Text("Status:");
 				statusText = UI.Text("---");
@@ -352,6 +381,12 @@ namespace NeosLogixCleanupWizard {
 			{
 				if (!ValidateWizard()) return;
 
+				if (!allowChanges.Value.Value)
+				{
+					UpdateStatusText("You must allow changes!");
+					return;
+				}
+
 				if (results.References.Count == 0)
 				{
 					UpdateStatusText("No search results to process!");
@@ -362,17 +397,9 @@ namespace NeosLogixCleanupWizard {
 				enableButton.Enabled = false;
 
 				int count = 0;
-				if (ignoreGenericTypes.Value.Value == true)
+				foreach (Component c in results.References)
 				{
-					foreach (Component c in results.References)
-					{
-						c.Enabled = true;
-						count++;
-					}
-				}
-				else
-				{
-					foreach (Component c in results.References)
+					if (c != null)
 					{
 						c.Enabled = true;
 						count++;
@@ -389,6 +416,12 @@ namespace NeosLogixCleanupWizard {
 			{
 				if (!ValidateWizard()) return;
 
+				if (!allowChanges.Value.Value)
+				{
+					UpdateStatusText("You must allow changes!");
+					return;
+				}
+
 				if (results.References.Count == 0)
 				{
 					UpdateStatusText("No search results to process!");
@@ -399,17 +432,9 @@ namespace NeosLogixCleanupWizard {
 				disableButton.Enabled = false;
 
 				int count = 0;
-				if (ignoreGenericTypes.Value.Value == true)
+				foreach (Component c in results.References)
 				{
-					foreach (Component c in results.References)
-					{
-						c.Enabled = false;
-						count++;
-					}
-				}
-				else
-				{
-					foreach (Component c in results.References)
+					if (c != null)
 					{
 						c.Enabled = false;
 						count++;
@@ -426,7 +451,13 @@ namespace NeosLogixCleanupWizard {
 			{
 				if (!ValidateWizard()) return;
 
-				if (confirmDestroy.Value.Value == false)
+				if (!allowChanges.Value.Value)
+				{
+					UpdateStatusText("You must allow changes!");
+					return;
+				}
+
+				if (!confirmDestroy.Value.Value)
 				{
 					UpdateStatusText("You must confirm destroy!");
 					return;
@@ -442,20 +473,9 @@ namespace NeosLogixCleanupWizard {
 				destroyButton.Enabled = false;
 
 				int count = 0;
-				if (ignoreGenericTypes.Value.Value == true)
+				foreach (Component c in results.References)
 				{
-					foreach (Component c in results.References)
-					{
-						c.RunSynchronously(() =>
-						{
-							c.Destroy();
-						});
-						count++;
-					}
-				}
-				else
-				{
-					foreach (Component c in results.References)
+					if (c != null)
 					{
 						c.RunSynchronously(() =>
 						{
