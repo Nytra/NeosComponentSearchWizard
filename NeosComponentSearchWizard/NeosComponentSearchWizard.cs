@@ -200,7 +200,7 @@ namespace NeosComponentSearchWizard
 				matchCase = Data.AddSlot("matchCase").AttachComponent<ValueField<bool>>();
 				allowChanges = Data.AddSlot("allowChanges").AttachComponent<ValueField<bool>>();
 				searchNiceName = Data.AddSlot("searchNiceName").AttachComponent<ValueField<bool>>();
-				maxResults = Data.AddSlot("searchNiceName").AttachComponent<ValueField<int>>();
+				maxResults = Data.AddSlot("maxResults").AttachComponent<ValueField<int>>();
 				maxResults.Value.Value = 256;
 				results = Data.AddSlot("referenceMultiplexer").AttachComponent<ReferenceMultiplexer<Component>>();
 
