@@ -47,7 +47,7 @@ namespace NeosComponentSearchWizard
 			readonly ValueField<bool> matchCase;
 			readonly ValueField<bool> allowChanges;
 			readonly ValueField<bool> searchNiceName;
-			readonly ValueField<bool> conditionMode;
+			//readonly ValueField<bool> conditionMode;
 			readonly ValueField<int> maxResults;
 
 			readonly ReferenceMultiplexer<Component> results;
@@ -157,15 +157,24 @@ namespace NeosComponentSearchWizard
 
 				searchString = matchCase.Value.Value ? nameField.Value.Value : nameField.Value.Value?.ToLower();
 
-				matchName = nameField.Value.Value != null && nameField.Value.Value.Trim() != "" && compName.Contains(searchString);
+				matchName = nameField.Value.Value != null && nameField.Value.Value.Trim() != "" && compName.Contains(searchString.Trim());
 
-				if (conditionMode.Value.Value)
+				//if (conditionMode.Value.Value)
+				//{
+				//	return matchType && matchName;
+				//}
+				//else
+				//{
+				//	return matchType || matchName;
+				//}
+
+				if (componentField.Reference.Target == null || nameField.Value.Value == null || nameField.Value.Value.Trim() == "")
 				{
-					return matchType && matchName;
+					return matchType || matchName;
 				}
 				else
 				{
-					return matchType || matchName;
+					return matchType && matchName;
 				}
 			}
 
@@ -196,7 +205,7 @@ namespace NeosComponentSearchWizard
 				showDetails = Data.AddSlot("showDetails").AttachComponent<ValueField<bool>>();
 				confirmDestroy = Data.AddSlot("confirmDestroy").AttachComponent<ValueField<bool>>();
 				nameField = Data.AddSlot("nameField").AttachComponent<ValueField<string>>();
-				conditionMode = Data.AddSlot("conditionMode").AttachComponent<ValueField<bool>>();
+				//conditionMode = Data.AddSlot("conditionMode").AttachComponent<ValueField<bool>>();
 				matchCase = Data.AddSlot("matchCase").AttachComponent<ValueField<bool>>();
 				allowChanges = Data.AddSlot("allowChanges").AttachComponent<ValueField<bool>>();
 				searchNiceName = Data.AddSlot("searchNiceName").AttachComponent<ValueField<bool>>();
@@ -241,12 +250,12 @@ namespace NeosComponentSearchWizard
 				var textField = UI.TextField();
 				textField.Text.Content.OnValueChange += (field) => nameField.Value.Value = field.Value;
 
+				UI.HorizontalElementWithLabel("Search Full Name (Including type arguments):", 0.942f, () => UI.BooleanMemberEditor(searchNiceName.Value));
 				UI.HorizontalElementWithLabel("Match Case:", 0.942f, () => UI.BooleanMemberEditor(matchCase.Value));
-				UI.HorizontalElementWithLabel("Search Full Name (Including type):", 0.942f, () => UI.BooleanMemberEditor(searchNiceName.Value));
 
-				UI.Spacer(24f);
+				//UI.Spacer(24f);
 
-				UI.HorizontalElementWithLabel("Condition Mode (False: OR, True: AND):", 0.942f, () => UI.BooleanMemberEditor(conditionMode.Value));
+				//UI.HorizontalElementWithLabel("Condition Mode (False: OR, True: AND):", 0.942f, () => UI.BooleanMemberEditor(conditionMode.Value));
 
 				UI.Spacer(24f);
 
