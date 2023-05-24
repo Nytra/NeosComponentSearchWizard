@@ -195,7 +195,7 @@ namespace NeosComponentSearchWizard
 				canvasPanel.Panel.AddCloseButton();
 				canvasPanel.Panel.AddParentButton();
 				canvasPanel.Panel.Title = WIZARD_TITLE;
-				canvasPanel.Canvas.Size.Value = new float2(800f, 768f);
+				canvasPanel.Canvas.Size.Value = new float2(800f, 732f);
 
 				Slot Data = WizardSlot.AddSlot("Data");
 				processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
@@ -259,10 +259,14 @@ namespace NeosComponentSearchWizard
 
 				UI.Spacer(24f);
 
-				UI.Text("Max Results:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
-				var intField = UI.IntegerField(1, 1025);
-				intField.ParsedValue.Value = maxResults.Value.Value;
-				intField.ParsedValue.OnValueChange += (field) => maxResults.Value.Value = field.Value;
+				//UI.Text("Max Results:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+				UI.HorizontalElementWithLabel("Max Results:", 0.884f, () => 
+				{
+					var intField = UI.IntegerField(1, 1025);
+					intField.ParsedValue.Value = maxResults.Value.Value;
+					intField.ParsedValue.OnValueChange += (field) => maxResults.Value.Value = field.Value;
+					return intField;
+				});
 
 				//UI.Text("Condition Mode:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 
