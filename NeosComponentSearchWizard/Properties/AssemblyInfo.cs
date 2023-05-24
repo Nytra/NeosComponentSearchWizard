@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NeosComponentSearchWizard")]
-[assembly: AssemblyDescription("A NeosModLoader mod for Neos VR that provides a wizard for cleaning up leftover logix components.")]
+[assembly: AssemblyTitle("ComponentSearchWizard")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Nytra")]
-[assembly: AssemblyProduct("NeosComponentSearchWizard")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("ComponentSearchWizard")]
 [assembly: AssemblyCopyright("Copyright © Nytra 2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
