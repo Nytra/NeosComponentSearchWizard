@@ -208,7 +208,7 @@ namespace ComponentWizard
 				canvasPanel.Panel.AddParentButton();
 				canvasPanel.Panel.Title = WIZARD_TITLE;
 				//canvasPanel.Canvas.Size.Value = new float2(400f, 390f);
-				canvasPanel.Canvas.Size.Value = new float2(800f, 800f);
+				canvasPanel.Canvas.Size.Value = new float2(800f, 760f);
 
 				Slot Data = WizardSlot.AddSlot("Data");
 				this.processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
