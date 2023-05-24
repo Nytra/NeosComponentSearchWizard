@@ -195,7 +195,7 @@ namespace NeosComponentSearchWizard
 				canvasPanel.Panel.AddCloseButton();
 				canvasPanel.Panel.AddParentButton();
 				canvasPanel.Panel.Title = WIZARD_TITLE;
-				canvasPanel.Canvas.Size.Value = new float2(800f, 816f);
+				canvasPanel.Canvas.Size.Value = new float2(800f, 768f);
 
 				Slot Data = WizardSlot.AddSlot("Data");
 				processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
