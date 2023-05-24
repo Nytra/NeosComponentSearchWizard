@@ -40,7 +40,7 @@ namespace NeosComponentSearchWizard
 			readonly ReferenceField<Slot> processingRoot;
 			readonly ReferenceField<Component> componentField;
 
-			readonly ValueField<bool> ignoreGenericTypes;
+			//readonly ValueField<bool> ignoreGenericTypes;
 			readonly ValueField<bool> showDetails;
 			readonly ValueField<bool> confirmDestroy;
 			readonly ValueField<string> nameField;
@@ -143,14 +143,16 @@ namespace NeosComponentSearchWizard
 				bool matchType, matchName;
 				string compName, searchString;
 
-				if (ignoreGenericTypes.Value.Value)
-				{
-					matchType = c.GetType().Name == componentField.Reference.Target?.GetType().Name;
-				}
-				else
-				{
-					matchType = c.GetType() == componentField.Reference.Target?.GetType();
-				}
+				//if (ignoreGenericTypes.Value.Value)
+				//{
+				//	matchType = c.GetType().Name == componentField.Reference.Target?.GetType().Name;
+				//}
+				//else
+				//{
+				//	matchType = c.GetType() == componentField.Reference.Target?.GetType();
+				//}
+
+				matchType = c.GetType() == componentField.Reference.Target?.GetType();
 
 				compName = searchNiceName.Value.Value ? c.GetType().GetNiceName() : c.GetType().Name;
 				compName = matchCase.Value.Value ? compName : compName.ToLower();
@@ -201,7 +203,7 @@ namespace NeosComponentSearchWizard
 				processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
 				processingRoot.Reference.Value = WizardSlot.World.RootSlot.ReferenceID;
 				componentField = Data.AddSlot("componentField").AttachComponent<ReferenceField<Component>>();
-				ignoreGenericTypes = Data.AddSlot("ignoreGenericTypes").AttachComponent<ValueField<bool>>();
+				//ignoreGenericTypes = Data.AddSlot("ignoreGenericTypes").AttachComponent<ValueField<bool>>();
 				showDetails = Data.AddSlot("showDetails").AttachComponent<ValueField<bool>>();
 				confirmDestroy = Data.AddSlot("confirmDestroy").AttachComponent<ValueField<bool>>();
 				nameField = Data.AddSlot("nameField").AttachComponent<ValueField<string>>();
@@ -242,7 +244,7 @@ namespace NeosComponentSearchWizard
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
-				UI.HorizontalElementWithLabel("Ignore Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
+				//UI.HorizontalElementWithLabel("Ignore Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
 
 				UI.Spacer(24f);
 
