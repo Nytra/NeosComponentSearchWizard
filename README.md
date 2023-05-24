@@ -1,6 +1,6 @@
-# ComponentWizard
+# ComponentSearchWizard
 
-A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that provides a wizard for searching for components by type or by string matching and then batch enabling, disabling or destroying them.
+A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that provides a wizard for searching for components by type or by name, displaying them in a list, and then provides buttons to batch enable, disable or destroy them.
 
 ## Installation
 1. Install [NeosModLoader](https://github.com/zkxs/NeosModLoader).
@@ -10,4 +10,6 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 ## Usage
 The wizard can be found in the DevTip 'Create New' menu under Editors/Component Wizard (Mod). <br>
 
-This mod should be used carefully as it allows changing a large number of components at once.<br>
+This mod should be used carefully as it allows manipulating a large number of components at once.<br>
+
+The mod does not currently support undo.<br>
