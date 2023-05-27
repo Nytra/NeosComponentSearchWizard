@@ -12,6 +12,14 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 ## Usage
 The wizard can be found in the DevTip 'Create New' menu under Editors/Component Wizard (Mod). <br>
 
-This mod should be used carefully as it allows manipulating a large number of components at once.<br>
+You can drop a component reference into the Component Type field to search for components with that exact type, or check Ignore Type Arguments to search for components with the same base type only. For example, if you drop a ValueField<bool>, then with Ignore Type Arguments it will search for all ValueField components. <br>
+  
+The Search Nice Name option will take the component name as, for example, ValueField<bool> as opposed to ValueField`1. <br>
+  
+You can check Exact Match to match the whole string as you typed it, instead of checking if the component name only contains that string. <br>
+  
+You can check Spawn Detail Text which gives a text with the component names, their Enabled state, and the hierarchy path to get to them. <br>
 
-The mod does not currently support undo.<br>
+This mod should be used carefully as it allows manipulating a large number of components at once. <br>
+
+The mod does not currently support undo. <br>
