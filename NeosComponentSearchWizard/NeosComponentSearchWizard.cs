@@ -4,6 +4,8 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using BaseX;
 using CodeX;
+using FrooxEngine.Undo;
+using FrooxEngine.LogiX.Undo;
 
 namespace NeosComponentSearchWizard
 {
@@ -40,7 +42,7 @@ namespace NeosComponentSearchWizard
 			readonly ReferenceField<Slot> processingRoot;
 			readonly ReferenceField<Component> componentField;
 
-			//readonly ValueField<bool> ignoreGenericTypes;
+			readonly ValueField<bool> ignoreGenericTypes;
 			readonly ValueField<bool> showDetails;
 			readonly ValueField<bool> confirmDestroy;
 			readonly ValueField<string> nameField;
@@ -49,6 +51,7 @@ namespace NeosComponentSearchWizard
 			readonly ValueField<bool> searchNiceName;
 			//readonly ValueField<bool> conditionMode;
 			readonly ValueField<int> maxResults;
+			readonly ValueField<bool> exactMatch;
 
 			readonly ReferenceMultiplexer<Component> results;
 
@@ -143,23 +146,29 @@ namespace NeosComponentSearchWizard
 				bool matchType, matchName;
 				string compName, searchString;
 
-				//if (ignoreGenericTypes.Value.Value)
-				//{
-				//	matchType = c.GetType().Name == componentField.Reference.Target?.GetType().Name;
-				//}
-				//else
-				//{
-				//	matchType = c.GetType() == componentField.Reference.Target?.GetType();
-				//}
+				if (ignoreGenericTypes.Value.Value)
+				{
+					matchType = c.GetType().Name == componentField.Reference.Target?.GetType().Name;
+				}
+				else
+				{
+					matchType = c.GetType() == componentField.Reference.Target?.GetType();
+				}
 
-				matchType = c.GetType() == componentField.Reference.Target?.GetType();
+				//matchType = c.GetType() == componentField.Reference.Target?.GetType();
 
 				compName = searchNiceName.Value.Value ? c.GetType().GetNiceName() : c.GetType().Name;
 				compName = matchCase.Value.Value ? compName : compName.ToLower();
 
 				searchString = matchCase.Value.Value ? nameField.Value.Value : nameField.Value.Value?.ToLower();
 
-				matchName = nameField.Value.Value != null && nameField.Value.Value.Trim() != "" && compName.Contains(searchString.Trim());
+				matchName = searchString != null &&
+							searchString.Trim() != "" &&
+							(exactMatch.Value.Value ? compName == searchString.Trim() : compName.Contains(searchString.Trim()));
+
+				//matchName = searchString != null &&
+				//			searchString.Trim() != "" &&
+				//			compName.Contains(searchString.Trim());
 
 				//if (conditionMode.Value.Value)
 				//{
@@ -199,11 +208,13 @@ namespace NeosComponentSearchWizard
 				canvasPanel.Panel.Title = WIZARD_TITLE;
 				canvasPanel.Canvas.Size.Value = new float2(800f, 732f);
 
+				//canvasPanel.Canvas.Slot.AttachComponent<Image>().Tint.Value = new color(1f, 0.2f);
+
 				Slot Data = WizardSlot.AddSlot("Data");
 				processingRoot = Data.AddSlot("processingRoot").AttachComponent<ReferenceField<Slot>>();
 				processingRoot.Reference.Value = WizardSlot.World.RootSlot.ReferenceID;
 				componentField = Data.AddSlot("componentField").AttachComponent<ReferenceField<Component>>();
-				//ignoreGenericTypes = Data.AddSlot("ignoreGenericTypes").AttachComponent<ValueField<bool>>();
+				ignoreGenericTypes = Data.AddSlot("ignoreGenericTypes").AttachComponent<ValueField<bool>>();
 				showDetails = Data.AddSlot("showDetails").AttachComponent<ValueField<bool>>();
 				confirmDestroy = Data.AddSlot("confirmDestroy").AttachComponent<ValueField<bool>>();
 				nameField = Data.AddSlot("nameField").AttachComponent<ValueField<string>>();
@@ -214,6 +225,7 @@ namespace NeosComponentSearchWizard
 				maxResults = Data.AddSlot("maxResults").AttachComponent<ValueField<int>>();
 				maxResults.Value.Value = 256;
 				results = Data.AddSlot("referenceMultiplexer").AttachComponent<ReferenceMultiplexer<Component>>();
+				exactMatch = Data.AddSlot("exactMatch").AttachComponent<ValueField<bool>>();
 
 				UIBuilder UI = new UIBuilder(canvasPanel.Canvas);
 				UI.Canvas.MarkDeveloper();
@@ -234,6 +246,10 @@ namespace NeosComponentSearchWizard
 				UI.Style.PreferredWidth = 400f;
 				UI.Style.MinWidth = 400f;
 
+				//UI.Style.TextColor = color.White;
+				//UI.Style.ButtonColor = color.Black;
+				//UI.Style.DisabledColor = color.Gray;
+
 				UI.Text("Processing Root:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.Next("Root");
 				UI.Current.AttachComponent<RefEditor>().Setup(processingRoot.Reference);
@@ -244,16 +260,18 @@ namespace NeosComponentSearchWizard
 				UI.Next("Component");
 				UI.Current.AttachComponent<RefEditor>().Setup(componentField.Reference);
 
-				//UI.HorizontalElementWithLabel("Ignore Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
+				UI.HorizontalElementWithLabel("Ignore Type Arguments:", 0.942f, () => UI.BooleanMemberEditor(ignoreGenericTypes.Value));
 
 				UI.Spacer(24f);
 
 				UI.Text("{B} Name Contains:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
+
 				var textField = UI.TextField();
 				textField.Text.Content.OnValueChange += (field) => nameField.Value.Value = field.Value;
 
-				UI.HorizontalElementWithLabel("Search Full Name (Including type arguments):", 0.942f, () => UI.BooleanMemberEditor(searchNiceName.Value));
+				UI.HorizontalElementWithLabel("Search Nice Name (With type arguments):", 0.942f, () => UI.BooleanMemberEditor(searchNiceName.Value));
 				UI.HorizontalElementWithLabel("Match Case:", 0.942f, () => UI.BooleanMemberEditor(matchCase.Value));
+				UI.HorizontalElementWithLabel("Exact Match:", 0.942f, () => UI.BooleanMemberEditor(exactMatch.Value));
 
 				//UI.Spacer(24f);
 
@@ -261,7 +279,6 @@ namespace NeosComponentSearchWizard
 
 				UI.Spacer(24f);
 
-				//UI.Text("Max Results:").HorizontalAlign.Value = TextHorizontalAlignment.Left;
 				UI.HorizontalElementWithLabel("Max Results:", 0.884f, () => 
 				{
 					var intField = UI.IntegerField(1, 1025);
