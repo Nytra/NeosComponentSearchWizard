@@ -12,9 +12,9 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 ## Usage
 The wizard can be found in the DevTip 'Create New' menu under Editors/Component Wizard (Mod). <br>
 
-You can drop a component reference into the Component Type field to search for components with that exact type, or check Ignore Type Arguments to search for components with the same base type only. For example, if you drop a ValueField<bool>, then with Ignore Type Arguments it will search for all ValueField components. <br>
+You can drop a component reference into the Component Type field to search for components with that exact type, or check Ignore Type Arguments to search for components with the same base type only. For example, if you drop a ValueField\<bool\>, then with Ignore Type Arguments it will search for all ValueField components. <br>
   
-The Search Nice Name option will take the component name as, for example, ValueField<bool> as opposed to ValueField`1. <br>
+The Search Nice Name option will take the component name as, for example, ValueField\<bool\> as opposed to ValueField\`1. <br>
   
 You can check Exact Match to match the whole string as you typed it, instead of checking if the component name only contains that string. <br>
   
