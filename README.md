@@ -1,6 +1,6 @@
 # ComponentSearchWizard
 
-![20230524162957_1](https://github.com/Nytra/NeosComponentSearchWizard/assets/14206961/6926110a-3697-442c-b324-77f541f87473)
+![20230527025150_1](https://github.com/Nytra/NeosComponentSearchWizard/assets/14206961/2238238c-3f73-423f-824f-1360624918a4)
 
 A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that provides a wizard for searching for components by type and/or by name, displaying them in a list, and then provides buttons to batch enable, disable or destroy them.
 
