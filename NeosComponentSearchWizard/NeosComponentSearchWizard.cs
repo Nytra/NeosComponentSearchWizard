@@ -4,15 +4,13 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using BaseX;
 using CodeX;
-using FrooxEngine.Undo;
-using FrooxEngine.LogiX.Undo;
 
 namespace NeosComponentSearchWizard
 {
 	public class NeosComponentSearchWizard : NeosMod {
 		public override string Name => "Component Search Wizard";
 		public override string Author => "Nytra";
-		public override string Version => "1.0.0";
+		public override string Version => "1.0.1";
 		public override string Link => "https://github.com/Nytra/NeosComponentWizard";
 
 		const string WIZARD_TITLE = "Component Search Wizard (Mod)";
@@ -206,7 +204,7 @@ namespace NeosComponentSearchWizard
 				canvasPanel.Panel.AddCloseButton();
 				canvasPanel.Panel.AddParentButton();
 				canvasPanel.Panel.Title = WIZARD_TITLE;
-				canvasPanel.Canvas.Size.Value = new float2(800f, 732f);
+				canvasPanel.Canvas.Size.Value = new float2(800f, 756f);
 
 				//canvasPanel.Canvas.Slot.AttachComponent<Image>().Tint.Value = new color(1f, 0.2f);
 
