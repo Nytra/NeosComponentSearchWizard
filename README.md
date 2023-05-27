@@ -20,6 +20,8 @@ You can check Exact Match to match the whole string as you typed it, instead of 
   
 You can check Spawn Detail Text which gives a text with the component names, their Enabled state, and the hierarchy path to get to them. <br>
 
+## Notes
+
 This mod should be used carefully as it allows manipulating a large number of components at once. <br>
 
 The mod does not currently support undo. <br>
