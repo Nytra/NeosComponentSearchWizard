@@ -24,4 +24,4 @@ You can check Spawn Detail Text which gives a text with the component names, the
 
 This mod should be used carefully as it allows manipulating a large number of components at once. <br>
 
-The mod does not currently support undo. <br>
+The mod now supports undo! <br>
