@@ -4,6 +4,7 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using BaseX;
 using CodeX;
+using FrooxEngine.Undo;
 
 namespace NeosComponentSearchWizard
 {
@@ -401,19 +402,24 @@ namespace NeosComponentSearchWizard
 				enableButton.Enabled = false;
 
 				int count = 0;
-				foreach (Component c in results.References)
+				WizardSlot.World.RunSynchronously(() =>
 				{
-					if (c != null)
+					WizardSlot.World.BeginUndoBatch($"Enable {results.References.Count} Components");
+					foreach (Component c in results.References)
 					{
-						c.Enabled = true;
-						count++;
+						if (c != null)
+						{
+							c.EnabledField.UndoableSet(true);
+							count++;
+						}
 					}
-				}
+					WizardSlot.World.EndUndoBatch();
 
-				UpdateStatusText($"Enabled {count} matching components.");
+					UpdateStatusText($"Enabled {count} matching components.");
 
-				performingOperations = false;
-				enableButton.Enabled = true;
+					performingOperations = false;
+					enableButton.Enabled = true;
+				});
 			}
 
 			void DisablePressed(IButton button, ButtonEventData eventData)
@@ -436,19 +442,24 @@ namespace NeosComponentSearchWizard
 				disableButton.Enabled = false;
 
 				int count = 0;
-				foreach (Component c in results.References)
+				WizardSlot.World.RunSynchronously(() =>
 				{
-					if (c != null)
+					WizardSlot.World.BeginUndoBatch($"Disable {results.References.Count} Components");
+					foreach (Component c in results.References)
 					{
-						c.Enabled = false;
-						count++;
+						if (c != null)
+						{
+							c.EnabledField.UndoableSet(false);
+							count++;
+						}
 					}
-				}
+					WizardSlot.World.EndUndoBatch();
 
-				UpdateStatusText($"Disabled {count} matching components.");
+					UpdateStatusText($"Disabled {count} matching components.");
 
-				performingOperations = false;
-				disableButton.Enabled = true;
+					performingOperations = false;
+					disableButton.Enabled = true;
+				});
 			}
 
 			void DestroyPressed(IButton button, ButtonEventData eventData)
@@ -477,24 +488,26 @@ namespace NeosComponentSearchWizard
 				destroyButton.Enabled = false;
 
 				int count = 0;
-				foreach (Component c in results.References)
+				WizardSlot.World.RunSynchronously(() => 
 				{
-					if (c != null)
+					WizardSlot.World.BeginUndoBatch($"Destroy {results.References.Count} Components");
+					foreach (Component c in results.References)
 					{
-						c.RunSynchronously(() =>
+						if (c != null)
 						{
-							c.Destroy();
-						});
-						count++;
+							c.UndoableDestroy();
+							count++;
+						}
 					}
-				}
+					WizardSlot.World.EndUndoBatch();
 
-				confirmDestroy.Value.Value = false;
-				UpdateStatusText($"Destroyed {count} matching components.");
-				results.References.Clear();
+					UpdateStatusText($"Destroyed {count} matching components.");
 
-				performingOperations = false;
-				destroyButton.Enabled = true;
+					results.References.Clear();
+					performingOperations = false;
+					destroyButton.Enabled = true;
+					confirmDestroy.Value.Value = false;
+				});
 			}
 		}
 	}
