@@ -11,7 +11,7 @@ namespace NeosComponentSearchWizard
 	public class NeosComponentSearchWizard : NeosMod {
 		public override string Name => "Component Search Wizard";
 		public override string Author => "Nytra";
-		public override string Version => "1.1.0";
+		public override string Version => "1.1.1";
 		public override string Link => "https://github.com/Nytra/NeosComponentWizard";
 
 		const string WIZARD_TITLE = "Component Search Wizard (Mod)";
@@ -27,15 +27,16 @@ namespace NeosComponentSearchWizard
 		class ComponentSearchWizard
 		{
 			public static ComponentSearchWizard GetOrCreateWizard(Slot x) {
-				World focusedWorld = Engine.Current.WorldManager.FocusedWorld;
-				if (worldWizardMap.ContainsKey(focusedWorld) && worldWizardMap[focusedWorld] != null) {
-					worldWizardMap[focusedWorld].WizardSlot.PositionInFrontOfUser(float3.Backward, distance: 1f);
-					return worldWizardMap[focusedWorld];
-				} else {
-					return new ComponentSearchWizard(x);
-				}
+				//World focusedWorld = Engine.Current.WorldManager.FocusedWorld;
+				//if (worldWizardMap.ContainsKey(focusedWorld) && worldWizardMap[focusedWorld] != null) {
+				//	worldWizardMap[focusedWorld].WizardSlot.PositionInFrontOfUser(float3.Backward, distance: 1f);
+				//	return worldWizardMap[focusedWorld];
+				//} else {
+				//	return new ComponentSearchWizard(x);
+				//}
+				return new ComponentSearchWizard(x);
 			}
-			static Dictionary<World, ComponentSearchWizard> worldWizardMap = new Dictionary<World, ComponentSearchWizard>();
+			//static Dictionary<World, ComponentSearchWizard> worldWizardMap = new Dictionary<World, ComponentSearchWizard>();
 			Slot WizardSlot;
 
 			readonly ReferenceField<Slot> processingRoot;
@@ -194,11 +195,11 @@ namespace NeosComponentSearchWizard
 			}
 
 			ComponentSearchWizard(Slot x) {
-				worldWizardMap.Add(Engine.Current.WorldManager.FocusedWorld, this);
+				//worldWizardMap.Add(Engine.Current.WorldManager.FocusedWorld, this);
 
 				WizardSlot = x;
 				WizardSlot.Tag = "Developer";
-				WizardSlot.OnPrepareDestroy += Slot_OnPrepareDestroy;
+				//WizardSlot.OnPrepareDestroy += Slot_OnPrepareDestroy;
 				WizardSlot.PersistentSelf = false;
 
 				NeosCanvasPanel canvasPanel = WizardSlot.AttachComponent<NeosCanvasPanel>();
@@ -329,13 +330,13 @@ namespace NeosComponentSearchWizard
 				WizardSlot.PositionInFrontOfUser(float3.Backward, distance: 1f);
 			}
 
-			void Slot_OnPrepareDestroy(Slot slot) {
-				if (slot.World != null && worldWizardMap.ContainsKey(slot.World))
-				{
-					worldWizardMap[slot.World] = null;
-					worldWizardMap.Remove(slot.World);
-				}
-			}
+			//void Slot_OnPrepareDestroy(Slot slot) {
+			//	if (slot.World != null && worldWizardMap.ContainsKey(slot.World))
+			//	{
+			//		worldWizardMap[slot.World] = null;
+			//		worldWizardMap.Remove(slot.World);
+			//	}
+			//}
 
 			void SearchPressed(IButton button, ButtonEventData eventData)
 			{
